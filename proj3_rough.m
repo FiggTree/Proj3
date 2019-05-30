@@ -12,10 +12,12 @@ N=(b-a)./h;
 tH=10;
 tTs=10;
 F=10000;
+Qspec=700000;
+Qspec2=900000;
 
 for i=1:N
     timeval(i+1)=timeval(i)+h;
-    Qval(i+1)=Qval(i) + dQ(Qval(i),tH).*h;
+    Qval(i+1)=Qval(i) + dQ(Qval(i),Qspec,tH).*h;
     CAval(i+1)=CAval(i) + dCA(CAval(i),Tval(i),F).*h;
     Tval(i+1)=Tval(i) + dT(Tval(i),CAval(i),Qval(i),F).*h;
     Tsval(i+1)=Tsval(i) + dTs(Tsval(i),Tval(i),tTs).*h;
@@ -31,7 +33,7 @@ tHVary=[tH;tH;tH*1.5;tH*.5;tH;tH];
 tTsVary=[tTs;tTs;tTs;tTs;tTs*1.5;tTs*.5];
 for j=1:6
     for i=1:N
-        QvalVary(j,i+1)=QvalVary(j,i)+dQ(QvalVary(j,i),tHVary(j)).*h;
+        QvalVary(j,i+1)=QvalVary(j,i)+dQ(QvalVary(j,i),Qspec,tHVary(j)).*h;
         CAvalVary(j,i+1)=CAvalVary(j,i)+dCA(CAvalVary(j,i),TvalVary(j,i),FVary(j)).*h;
         TvalVary(j,i+1)=TvalVary(j,i)+dT(TvalVary(j,i),CAvalVary(j,i),QvalVary(j,i),FVary(j)).*h;
         TsvalVary(j,i+1)=TsvalVary(j,i)+dTs(TsvalVary(j,i),TvalVary(j,i),tTsVary(j)).*h;
@@ -145,3 +147,43 @@ stackedplot(timeval,plustTsvarytbl,'Title','50% more tTs','DisplayLabels',ylabel
 figure
 minustTsvarytbl=[QvalVary(6,:)',CAvalVary(6,:)',TvalVary(6,:)',TsvalVary(6,:)'];
 stackedplot(timeval,minustTsvarytbl,'Title','50% less tTs','DisplayLabels',ylabels1);
+%
+%
+Qval2(1)=700000;
+CAval2(1)=.25;
+Tval2(1)=350;
+Tsval2(1)=350;
+timeval2(1)=0;
+a2=timeval2(1);
+b2=200;
+h2=.25;
+N2=(b2-a2)./h2;
+
+
+for i=1:N2
+    timeval2(i+1)=timeval2(i)+h2;
+    if timeval2(i)<100
+        Qval2(i+1)=Qval2(i) + dQ(Qval2(i),Qspec,tH).*h2;
+    else
+        Qval2(i+1)=Qval2(i) + dQ(Qval2(i),Qspec2,tH).*h2;
+    end
+    CAval2(i+1)=CAval2(i) + dCA(CAval2(i),Tval2(i),F).*h2;
+    Tval2(i+1)=Tval2(i) + dT(Tval2(i),CAval2(i),Qval2(i),F).*h2;
+    Tsval2(i+1)=Tsval2(i) + dTs(Tsval2(i),Tval2(i),tTs).*h2;
+end
+
+figure
+plot(timeval,Qval,'k')
+plot(timeval2,Qval2,'r')
+
+figure
+plot(timeval,CAval,'k')
+plot(timeval2,CAval2,'r')
+
+figure
+plot(timeval,Tval,'k')
+plot(timeval2,Tval2,'r')
+
+figure
+plot(timeval,Tsval,'k')
+plot(timeval2,Tsval2,'r')
