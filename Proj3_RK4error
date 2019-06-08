@@ -1,0 +1,306 @@
+clear
+Qval(1)=700000;
+CAval(1)=.25;
+Tval(1)=350;
+Tsval(1)=350;
+timeval(1)=0;
+a=timeval(1);
+b=200;
+h=.0001;
+N=(b-a)./h;
+
+tH=10;
+tTs=10;
+F=10000;
+Qspec=700000;
+Qspec2=900000;
+%standard (no variance) equations with Qspec change at t=100
+for i=1:N
+    timeval(i+1)=timeval(i)+h;
+    
+    if timeval(i)<100
+        K1=dQ(Qval(i),Qspec,tH);
+        K2=dQ(Qval(i)+K1.*h./2,Qspec,tH);
+        K3=dQ(Qval(i)+K2.*h./2,Qspec,tH);
+        K4=dQ(Qval(i)+K3.*h,Qspec,tH);
+        Qval(i+1)=Qval(i) + (K1+2.*K2+2.*K3+K4).*h./6;
+    else
+        K1=dQ(Qval(i),Qspec2,tH);
+        K2=dQ(Qval(i)+K1.*h./2,Qspec2,tH);
+        K3=dQ(Qval(i)+K2.*h./2,Qspec2,tH);
+        K4=dQ(Qval(i)+K3.*h,Qspec2,tH);
+        Qval(i+1)=Qval(i) + (K1+2.*K2+2.*K3+K4).*h./6;
+    end
+    
+    K1=dCA(CAval(i),Tval(i),F);
+    K2=dCA(CAval(i)+K1.*h./2,Tval(i),F);
+    K3=dCA(CAval(i)+K2.*h./2,Tval(i),F);
+    K4=dCA(CAval(i)+K3.*h,Tval(i),F);
+    CAval(i+1)=CAval(i) + (K1+2.*K2+2.*K3+K4).*h./6;
+    
+    K1=dT(Tval(i),CAval(i),Qval(i),F);
+    K2=dT(Tval(i)+K1.*h./2,CAval(i),Qval(i),F);
+    K3=dT(Tval(i)+K2.*h./2,CAval(i),Qval(i),F);
+    K4=dT(Tval(i)+K3.*h,CAval(i),Qval(i),F);
+    Tval(i+1)=Tval(i) + (K1+2.*K2+2.*K3+K4).*h./6;
+    
+    K1=dTs(Tsval(i),Tval(i),tTs);
+    K2=dTs(Tsval(i)+K1.*h./2,Tval(i),tTs);
+    K3=dTs(Tsval(i)+K2.*h./2,Tval(i),tTs);
+    K4=dTs(Tsval(i)+K3.*h,Tval(i),tTs);
+    Tsval(i+1)=Tsval(i) + (K1+2.*K2+2.*K3+K4).*h./6;
+end
+
+%variance equations with Qspec change at t=100
+%vary matrix F+50%, F-50%, tH+50%, tH-50%, tTs+50%, tTs-50%
+QvalVary(1:6,1)=700000;
+CAvalVary(1:6,1)=.25;
+TvalVary(1:6,1)=350;
+TsvalVary(1:6,1)=350;
+FVary=[F*1.5;F*.5;F;F;F;F];
+tHVary=[tH;tH;tH*1.5;tH*.5;tH;tH];
+tTsVary=[tTs;tTs;tTs;tTs;tTs*1.5;tTs*.5];
+timevalvary(1)=0;
+for j=1:6
+    for i=1:N
+        timevalvary(i+1)=timevalvary(i)+h;
+        
+        if timevalvary(i)<100
+            K1=dQ(QvalVary(j,i),Qspec,tHVary(j));
+            K2=dQ(QvalVary(j,i)+K1.*h./2,Qspec,tHVary(j));
+            K3=dQ(QvalVary(j,i)+K2.*h./2,Qspec,tHVary(j));
+            K4=dQ(QvalVary(j,i)+K3.*h,Qspec,tHVary(j));
+            QvalVary(j,i+1)=QvalVary(j,i)+(K1+2.*K2+2.*K3+K4).*h./6;
+        else
+            K1=dQ(QvalVary(j,i),Qspec2,tHVary(j));
+            K2=dQ(QvalVary(j,i)+K1.*h./2,Qspec2,tHVary(j));
+            K3=dQ(QvalVary(j,i)+K2.*h./2,Qspec2,tHVary(j));
+            K4=dQ(QvalVary(j,i)+K3.*h,Qspec2,tHVary(j));
+            QvalVary(j,i+1)=QvalVary(j,i)+(K1+2.*K2+2.*K3+K4).*h./6;
+        end
+        
+        K1=dCA(CAvalVary(j,i),TvalVary(j,i),FVary(j));
+        K2=dCA(CAvalVary(j,i)+K1.*h./2,TvalVary(j,i),FVary(j));
+        K3=dCA(CAvalVary(j,i)+K2.*h./2,TvalVary(j,i),FVary(j));
+        K4=dCA(CAvalVary(j,i)+K3.*h,TvalVary(j,i),FVary(j));
+        CAvalVary(j,i+1)=CAvalVary(j,i)+(K1+2.*K2+2.*K3+K4).*h./6;
+        K1=dT(TvalVary(j,i),CAvalVary(j,i),QvalVary(j,i),FVary(j));
+        K2=dT(TvalVary(j,i)+K1.*h./2,CAvalVary(j,i),QvalVary(j,i),FVary(j));
+        K3=dT(TvalVary(j,i)+K2.*h./2,CAvalVary(j,i),QvalVary(j,i),FVary(j));
+        K4=dT(TvalVary(j,i)+K3.*h,CAvalVary(j,i),QvalVary(j,i),FVary(j));
+        TvalVary(j,i+1)=TvalVary(j,i)+(K1+2.*K2+2.*K3+K4).*h./6;
+        K1=dTs(TsvalVary(j,i),TvalVary(j,i),tTsVary(j));
+        K2=dTs(TsvalVary(j,i)+K1.*h./2,TvalVary(j,i),tTsVary(j));
+        K3=dTs(TsvalVary(j,i)+K2.*h./2,TvalVary(j,i),tTsVary(j));
+        K4=dTs(TsvalVary(j,i)+K3.*h,TvalVary(j,i),tTsVary(j));
+        TsvalVary(j,i+1)=TsvalVary(j,i)+(K1+2.*K2+2.*K3+K4).*h./6;
+    end
+end
+
+% 4 figures holding the different differential components constant across
+% different variances. Includes Qspec change at t=100.
+figure
+hold on
+plot(timeval,QvalVary(1,:),'r') % +50% Feed
+plot(timeval,QvalVary(2,:),'b') % -50% Feed
+plot(timeval,QvalVary(3,:),'r.') % +50% tH
+plot(timeval,QvalVary(4,:),'b.') % -50% tH
+plot(timeval,QvalVary(5,:),'r--') % +50% tTs
+plot(timeval,QvalVary(6,:),'b--') % -50% tTs
+plot(timeval,Qval,'k') % no variance
+legend('plus feed','minus feed','plus tH','minus tH','plus tTs','minus tTs','no variance');
+title('Q heat added to reactor per second')
+ylabel('Heat per second (cal/s)')
+xlabel('Time (s)')
+xlim([a b]);
+
+figure
+hold on
+plot(timeval,CAvalVary(1,:),'r'); % +50% Feed
+plot(timeval,CAvalVary(2,:),'b'); % -50% Feed
+plot(timeval,CAvalVary(3,:),'r.'); % +50% tH
+plot(timeval,CAvalVary(4,:),'b.'); % -50% tH
+plot(timeval,CAvalVary(5,:),'r--'); % +50% tTs
+plot(timeval,CAvalVary(6,:),'b--'); % -50% tTs
+plot(timeval,CAval,'k') % no variance
+legend('plus feed','minus feed','plus tH','minus tH','plus tTs','minus tTs','no variance');
+ylim([0 1.1]);
+xlim([a b]);
+title('CA concentration of A in reactor')
+ylabel('Concentration (gmol/L)')
+xlabel('Time (s)')
+
+figure
+hold on
+plot(timeval,TvalVary(1,:),'r'); % +50% Feed
+plot(timeval,TvalVary(2,:),'b'); % -50% Feed
+plot(timeval,TvalVary(3,:),'r.'); % +50% tH
+plot(timeval,TvalVary(4,:),'b.'); % -50% tH
+plot(timeval,TvalVary(5,:),'r--'); % +50% tTs
+plot(timeval,TvalVary(6,:),'b--'); % -50% tTs
+plot(timeval,Tval,'k') % no variance
+legend('plus feed','minus feed','plus tH','minus tH','plus tTs','minus tTs','no variance');
+ylim([341 358]);
+xlim([a b]);
+title('T temperature in reactor')
+ylabel('Temperature (K)')
+xlabel('Time (s)')
+
+figure
+hold on
+plot(timeval,TsvalVary(1,:),'r'); % +50% Feed
+plot(timeval,TsvalVary(2,:),'b'); % -50% Feed
+plot(timeval,TsvalVary(3,:),'r.'); % +50% tH
+plot(timeval,TsvalVary(4,:),'b.'); % -50% tH
+plot(timeval,TsvalVary(5,:),'r--'); % +50% tTs
+plot(timeval,TsvalVary(6,:),'b--'); % -50% tTs
+plot(timeval,Tsval,'k') % no variance
+legend('plus feed','minus feed','plus tH','minus tH','plus tTs','minus tTs','no variance');
+ylim([341 358]);
+xlim([a b]);
+title('Ts temperature on sensor')
+ylabel('Temperature (K)')
+xlabel('Time (s)')
+
+
+% 7 figures holding the different variances constant across different
+% differential components.
+ylabels1={'Q','CA','T','Ts'};
+figure
+novarytbl=[Qval',CAval',Tval',Tsval'];
+stackedplot(timeval,novarytbl,'Title','No Variance','DisplayLabels',ylabels1);
+
+figure
+plusFvarytbl=[QvalVary(1,:)',CAvalVary(1,:)',TvalVary(1,:)',TsvalVary(1,:)'];
+stackedplot(timeval,plusFvarytbl,'Title','50% more Feed','DisplayLabels',ylabels1);
+
+figure
+minusFvarytbl=[QvalVary(2,:)',CAvalVary(2,:)',TvalVary(2,:)',TsvalVary(2,:)'];
+stackedplot(timeval,minusFvarytbl,'Title','50% less Feed','DisplayLabels',ylabels1);
+
+figure
+plustHvarytbl=[QvalVary(3,:)',CAvalVary(3,:)',TvalVary(3,:)',TsvalVary(3,:)'];
+stackedplot(timeval,plustHvarytbl,'Title','50% more tH','DisplayLabels',ylabels1);
+
+figure
+minustHvarytbl=[QvalVary(4,:)',CAvalVary(4,:)',TvalVary(4,:)',TsvalVary(4,:)'];
+stackedplot(timeval,minustHvarytbl,'Title','50% less tH','DisplayLabels',ylabels1);
+
+figure
+plustTsvarytbl=[QvalVary(5,:)',CAvalVary(5,:)',TvalVary(5,:)',TsvalVary(5,:)'];
+stackedplot(timeval,plustTsvarytbl,'Title','50% more tTs','DisplayLabels',ylabels1);
+
+figure
+minustTsvarytbl=[QvalVary(6,:)',CAvalVary(6,:)',TvalVary(6,:)',TsvalVary(6,:)'];
+stackedplot(timeval,minustTsvarytbl,'Title','50% less tTs','DisplayLabels',ylabels1);
+
+Qval2(1)=700000;
+CAval2(1)=.25;
+Tval2(1)=350;
+Tsval2(1)=350;
+timeval2(1)=0;
+a2=timeval2(1);
+b2=200;
+h2=.0001;
+N2=(b2-a2)./h2;
+
+for i=1:N2
+    timeval2(i+1)=timeval2(i)+h2;
+    K1=dQ(Qval2(i),Qspec,tH);
+    K2=dQ(Qval2(i)+K1.*h2./2,Qspec,tH);
+    K3=dQ(Qval2(i)+K2.*h2./2,Qspec,tH);
+    K4=dQ(Qval2(i)+K3.*h2,Qspec,tH);
+    Qval2(i+1)=Qval2(i) + (K1+2.*K2+2.*K3+K4).*h2./6;
+    K1=dCA(CAval2(i),Tval2(i),F);
+    K2=dCA(CAval2(i)+K1.*h2./2,Tval2(i),F);
+    K3=dCA(CAval2(i)+K2.*h2./2,Tval2(i),F);
+    K4=dCA(CAval2(i)+K3.*h2,Tval2(i),F);
+    CAval2(i+1)=CAval2(i) + (K1+2.*K2+2.*K3+K4).*h2./6;
+    K1=dT(Tval2(i),CAval2(i),Qval2(i),F);
+    K2=dT(Tval2(i)+K1.*h2./2,CAval2(i),Qval2(i),F);
+    K3=dT(Tval2(i)+K2.*h2./2,CAval2(i),Qval2(i),F);
+    K4=dT(Tval2(i)+K3.*h2,CAval2(i),Qval2(i),F);
+    Tval2(i+1)=Tval2(i) + (K1+2.*K2+2.*K3+K4).*h2./6;
+    K1=dTs(Tsval2(i),Tval2(i),tTs);
+    K2=dTs(Tsval2(i)+K1.*h2./2,Tval2(i),tTs);
+    K3=dTs(Tsval2(i)+K2.*h2./2,Tval2(i),tTs);
+    K4=dTs(Tsval2(i)+K3.*h2,Tval2(i),tTs);
+    Tsval2(i+1)=Tsval2(i) + (K1+2.*K2+2.*K3+K4).*h2./6;
+end
+
+%comparison of Qspec changing at 100s and standard graph. should overlap
+figure
+hold on
+plot(timeval2,Qval2,'k')
+title('Q at equilibrium')
+xlim([a2 b2]);
+
+figure
+hold on
+plot(timeval2,CAval2,'k')
+title('CA at eqilibrium')
+xlim([a2 b2]);
+
+figure
+hold on
+plot(timeval2,Tval2,'k')
+title('T at equilibrium')
+xlim([a2 b2]);
+
+figure
+hold on
+plot(timeval2,Tsval2,'k')
+title('Ts at equilibrium')
+xlim([a2 b2]);
+
+%extra graph, shows how Ts trails T
+figure
+hold on
+plot(timeval,Tval,'k')
+plot(timeval,Tsval,'r')
+legend('T','tTs')
+title('extra graph: temperature sensor delay')
+
+%lower accuracy for significant digits and error
+timeval3(1)=0;
+h3=.001;
+N3=(b2-a2)./h3;
+
+Qval3(1)=700000;
+CAval3(1)=.25;
+Tval3(1)=350;
+Tsval3(1)=350;
+
+
+for i=1:N3
+    timeval3(i+1)=timeval3(i)+h3;
+    K1=dQ(Qval3(i),Qspec,tH);
+    K2=dQ(Qval3(i)+K1.*h3./2,Qspec,tH);
+    K3=dQ(Qval3(i)+K2.*h3./2,Qspec,tH);
+    K4=dQ(Qval3(i)+K3.*h3,Qspec,tH);
+    Qval3(i+1)=Qval3(i) + (K1+2.*K2+2.*K3+K4).*h3./6;
+    K1=dCA(CAval3(i),Tval3(i),F);
+    K2=dCA(CAval3(i)+K1.*h3./2,Tval3(i),F);
+    K3=dCA(CAval3(i)+K2.*h3./2,Tval3(i),F);
+    K4=dCA(CAval3(i)+K3.*h3,Tval3(i),F);
+    CAval3(i+1)=CAval3(i) + (K1+2.*K2+2.*K3+K4).*h3./6;
+    K1=dT(Tval3(i),CAval3(i),Qval3(i),F);
+    K2=dT(Tval3(i)+K1.*h3./2,CAval3(i),Qval3(i),F);
+    K3=dT(Tval3(i)+K2.*h3./2,CAval3(i),Qval3(i),F);
+    K4=dT(Tval3(i)+K3.*h3,CAval3(i),Qval3(i),F);
+    Tval3(i+1)=Tval3(i) + (K1+2.*K2+2.*K3+K4).*h3./6;
+    K1=dTs(Tsval3(i),Tval3(i),tTs);
+    K2=dTs(Tsval3(i)+K1.*h3./2,Tval3(i),tTs);
+    K3=dTs(Tsval3(i)+K2.*h3./2,Tval3(i),tTs);
+    K4=dTs(Tsval3(i)+K3.*h3,Tval3(i),tTs);
+    Tsval3(i+1)=Tsval3(i) + (K1+2.*K2+2.*K3+K4).*h3./6;
+end
+
+Qerr=abs(Qval2(end)-Qval3(end))
+QerrP=Qerr./Qval2(end).*100
+CAerr=abs(CAval2(end)-CAval3(end))
+CAerrP=CAerr./CAval2(end).*100
+Terr=abs(Tval2(end)-Tval3(end))
+TerrP=Terr./Tval2(end).*100
+Tserr=abs(Tsval2(end)-Tsval3(end))
+TserrP=Tserr./Tsval2(end).*100
